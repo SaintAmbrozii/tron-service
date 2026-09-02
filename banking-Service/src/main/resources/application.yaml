@@ -1,0 +1,91 @@
+server:
+  port: 8050
+  shutdown: graceful
+  tomcat:
+    connection-timeout: 3s
+    keep-alive-timeout: 20s
+spring:
+  application:
+    name: banking-service
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  datasource:
+    username: userbek
+    password: passwordbek
+    url: jdbc:postgresql://localhost:6432/tr_db
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 2000
+      maximum-pool-size: 12
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+
+kafka:
+  bootstrap-servers: localhost:9092
+  client-id: banking-service
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+    acks: all
+    properties:
+      schema.registry.url: http://localhost:8081
+      enable.idempotence: true
+  consumer:
+    group-id: ${banking-service-group-v1}
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+    properties:
+      specific.avro.reader: true
+      avro.use.logical.type.converters: true
+      schema.registry.url: http://localhost:8081
+    auto-offset-reset: earliest
+    enable-auto-commit: false
+  listener:
+    ack-mode: manual
+
+
+kafka-properties:
+  topics:
+    banking-notification:
+      name: banking_notification_event_v1
+      replication-count: 1
+      partitions-count: 3
+      timeout-on-produce: 5s
+    user-notification:
+      name: user_notification_event_v1
+      replication-count: 1
+      partitions-count: 3
+      timeout-on-produce: 5s
+  consumers:
+    banking-group:
+      topic: outbox_banking_event_v1
+      ack-mode: MANUAL # Incident Service accepts values: MANUAL, MANUAL_IMMEDIATE, BATCH
+      concurrency: 1
+      group-id: banking-service-group-v2
+      nack-duration: 500ms
+
+  producers:
+    banking-notification:
+      topic: banking_notification_event_v1
+      sync-timeout: 5s
+    user-notification:
+      topic: user_notification_event_v1
+      sync-timeout: 5s
+  backoff:
+    interval: 5s
+    max-attempts: 5
+
+logging:
+  level:
+    org:
+      springframework:
+        kafka: DEBUG
+      apache:
+        kafka: WARN
+

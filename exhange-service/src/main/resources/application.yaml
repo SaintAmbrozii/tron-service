@@ -1,0 +1,13 @@
+server:
+  port: 8040
+  shutdown: graceful
+  tomcat:
+    connection-timeout: 3s
+    keep-alive-timeout: 20s
+spring:
+  application:
+    name: usd-service
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+cb_uri: "https://www.cbr-xml-daily.ru/daily_json.js"

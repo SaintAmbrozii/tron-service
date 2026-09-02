@@ -1,0 +1,34 @@
+server:
+  port: 8090
+  shutdown: graceful
+  tomcat:
+    connection-timeout: 3s
+    keep-alive-timeout: 20s
+spring:
+  application:
+    name: user-service
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  datasource:
+    username: userbek
+    password: passwordbek
+    url: jdbc:postgresql://localhost:6432/tr_db
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 2000
+      maximum-pool-size: 12
+  sql:
+    init:
+      mode: always # Запускать скрипт при каждом старте
+      schema-locations: classpath:db/migration/V1__create_table.sql
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+  flyway:
+    enabled: false
+    locations: classpath:db/migration

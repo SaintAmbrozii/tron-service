@@ -1,0 +1,100 @@
+server:
+  port: 8100
+  shutdown: graceful
+  tomcat:
+    connection-timeout: 3s
+    keep-alive-timeout: 20s
+spring:
+  application:
+    name: notification-service
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+kafka:
+  bootstrap-servers: localhost:9092
+  consumer:
+    group-id: ${notification-service-group-v1}
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+    properties:
+      specific.avro.reader: true
+      avro.use.logical.type.converters: true
+      schema.registry.url: http://localhost:8081
+    auto-offset-reset: earliest
+    enable-auto-commit: false
+  listener:
+    ack-mode: manual
+
+
+kafka-properties:
+  consumers:
+    notification-group:
+      topic: user_notification_event_v1
+      ack-mode: MANUAL
+      concurrency: 1
+      group-id: banking-service-group-v2
+      nack-duration: 500ms
+  backoff:
+    interval: 5s
+    max-attempts: 5
+
+
+user-client:
+  nearest-path: "/api/v1/users/profile"
+  config:
+    root-uri: http://localhost:8090
+    max-connections: 10
+    max-connections-per-route: 10
+    inactivity-seconds: 10
+    read-timeout: 5s
+    connect-timeout: 2s
+    connection-request-timeout: 1s
+    buffering-client-http-request-factory: true
+    key-store-bundle-name: ""
+    trust-store-bundle-name: ""
+    ssl-mode: NONE
+
+resilience4j:
+  circuitbreaker:
+    metrics:
+      enabled: true
+    configs:
+      default:
+        sliding-window-type: time_based
+        sliding-window-size: 30
+        permitted-number-of-calls-in-half-open-state: 5
+        failure-rate-threshold: 60
+        wait-duration-in-open-state:
+          seconds: 10
+        slow-call-duration-threshold:
+          seconds: 4
+        minimum-number-of-calls: 15
+    instances:
+      userBackend:
+        base-config: default
+  retry:
+    metrics:
+      enabled: true
+    configs:
+      default:
+        max-attempts: 5
+        wait-duration: 100ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        enable-randomized-wait: true
+        randomized-wait-factor: 0.75
+        ignore-exceptions:
+          - io.github.resilience4j.circuitbreaker.CallNotPermittedException
+          - com.example.notificacionservice.exception.RestClientNonRetryableException
+        retry-exceptions:
+          - com.example.notificacionservice.exception.RestClientRetryableException
+    instances:
+      userBackend:
+        base-config: default
+
+logging:
+  level:
+    org.springframework.kafka: DEBUG
+    org.apache.kafka: WARN
+
+

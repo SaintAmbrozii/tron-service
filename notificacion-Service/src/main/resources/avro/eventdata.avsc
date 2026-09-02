@@ -1,0 +1,22 @@
+{
+  "type": "record",
+  "name": "PaymentDataEvent",
+  "namespace": "com.example.avro.outbox",
+  "fields": [
+      {
+        "name": "userId",
+        "type": "string"
+      },
+      {
+        "name": "aggregateId",
+        "type": [
+          "null",
+          {
+            "type": "string",
+            "logicalType": "uuid"
+          }
+        ],
+        "default": null
+      }
+    ]
+}

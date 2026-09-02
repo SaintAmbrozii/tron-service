@@ -1,0 +1,69 @@
+package com.example.walletservice.service;
+
+import com.example.walletservice.domain.Exchange;
+import com.example.walletservice.domain.Outbox;
+import com.example.walletservice.dto.ExchangeDto;
+import com.example.walletservice.event.BankingTransactionListener;
+import com.example.walletservice.event.OutboxEvent;
+import com.example.walletservice.repo.ExchangeRepo;
+import com.example.walletservice.repo.OutboxRepo;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+public class UserExchangeService {
+
+    private final ExchangeRepo exchangeRepo;
+    private final OutboxRepo outboxRepo;
+    private final BankingTransactionListener bankingTransactionListener;
+
+    public UserExchangeService(ExchangeRepo exchangeRepo, OutboxRepo outboxRepo, BankingTransactionListener bankingTransactionListener) {
+        this.exchangeRepo = exchangeRepo;
+        this.outboxRepo = outboxRepo;
+        this.bankingTransactionListener = bankingTransactionListener;
+    }
+
+    @Transactional
+    public void saveExchange(String userId, String address,String card,BigDecimal rubAmount,BigDecimal usdt) {
+
+        Exchange exchange = Exchange.builder()
+                .userId(userId)
+                .userWallet(address)
+                .rubAmount(rubAmount)
+                .usdAmount(usdt)
+                .status(false).build();
+        Exchange saved = exchangeRepo.save(exchange);
+
+        Outbox outbox = Outbox.builder()
+                .amount(rubAmount)
+                .userId(userId)
+                .phone(card)
+                .aggregateId(saved.getId())
+                .status(false).build();
+
+        Outbox indb = outboxRepo.save(outbox);
+
+        bankingTransactionListener.onApplicationEvent(new OutboxEvent(indb.getId()));
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateExchande(UUID uuid) {
+        Optional<Exchange> exchange = exchangeRepo.findById(uuid);
+        if (exchange.isPresent()){
+            Exchange updated = exchange.get();
+            updated.setStatus(true);
+            exchangeRepo.save(updated);
+        }
+    }
+
+    public List<ExchangeDto> getUserExchages(String userId){
+        return exchangeRepo.findAllByUserId(userId).stream().map(ExchangeDto::toDto).collect(Collectors.toList());
+    }
+}

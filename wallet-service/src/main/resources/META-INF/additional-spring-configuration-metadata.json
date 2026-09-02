@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "spring.flyway.baseline-on-migrate",
+      "type": "java.lang.String",
+      "description": "Description for spring.flyway.baseline-on-migrate."
+  }
+] }

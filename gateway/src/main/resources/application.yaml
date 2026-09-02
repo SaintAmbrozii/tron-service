@@ -1,0 +1,109 @@
+server:
+  port: 8080
+  shutdown: graceful
+  netty:
+    connection-timeout: 3s
+    idle-timeout: 20s
+
+spring:
+  application:
+    name: "gateway-service"
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+  data:
+    redis:
+      connect-timeout: 3s
+      timeout: 10s
+      host: ${external.redis-host}
+      port: ${external.redis-port}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${external.keycloak-url}
+          jwk-set-uri: ${external.jwk-set-url}
+  cloud:
+    gateway:
+      server:
+        webflux:
+          httpclient:
+            connect-timeout: 3000
+            response-timeout: 10s
+          default-filters:
+            - name: Retry
+              args:
+                retries: 5
+                methods: GET
+                series: SERVER_ERROR
+                exceptions: java.io.IOException, java.util.concurrent.TimeoutException
+                backoff:
+                  firstBackoff: 300ms
+                  maxBackoff: 3000ms
+                  factor: 2
+                  basedOnPreviousValue: false
+                jitter:
+                  randomFactor: 0.6
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter:
+                  replenishRate: 10
+                  burstCapacity: 20
+                  requestedTokens: 1
+          routes:
+            - id: user-service-admin-route
+              uri: http://127.0.0.1:8090
+              predicates:
+                - Path=/api/v1/admin/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: userServiceCircuitBreaker
+            - id: user-service-user-route
+              uri: http://127.0.0.1:8090
+              predicates:
+                - Path=/api/v1/users/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: userServiceCircuitBreaker
+            - id: wallet-service-user-route
+              uri: http://127.0.0.1:8070
+              predicates:
+                - Path=/api/v1/exchange/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: exchangeServiceCircuitBreaker
+
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-type: time_based
+        sliding-window-size: 30
+        failure-rate-threshold: 60
+        permitted-number-of-calls-in-half-open-state: 5
+        wait-duration-in-open-state: 10s
+        slow-call-duration-threshold: 10s
+        minimum-number-of-calls: 15
+    instances:
+      userServiceCircuitBreaker:
+        base-config: default
+      exchangeServiceCircuitBreaker:
+        base-config: default
+      paymentServiceCircuitBreaker:
+        base-config: default
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 10s
+        cancel-running-future: false
+
+external:
+  redis-host: ${REDIS_HOST:localhost}
+  redis-port: ${REDIS_PORT:6379}
+  zipkin-url: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}
+  keycloak-url: ${KEYCLOAK_URL:http://localhost:8180/realms/tron-service}
+  jwk-set-url: ${JWK_SET_URL:http://localhost:8180/realms/tron-service/protocol/openid-connect/certs}

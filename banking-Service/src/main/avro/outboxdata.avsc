@@ -1,0 +1,37 @@
+{
+  "type": "record",
+  "name": "OutboxDataEvent",
+  "namespace": "com.example.avro.outbox",
+  "fields": [
+      {
+        "name": "id",
+        "type": {
+          "type": "string",
+          "logicalType": "uuid"
+        }
+      },
+      {
+        "name": "userId",
+        "type": "string"
+      },
+      {
+        "name": "phone",
+        "type": "string"
+      },
+      {
+        "name": "amount",
+        "type": "string"
+      },
+      {
+        "name": "aggregateId",
+        "type": [
+          "null",
+          {
+            "type": "string",
+            "logicalType": "uuid"
+          }
+        ],
+        "default": null
+      }
+    ]
+}
