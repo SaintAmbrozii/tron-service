@@ -107,3 +107,28 @@ external:
   zipkin-url: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}
   keycloak-url: ${KEYCLOAK_URL:http://localhost:8180/realms/tron-service}
   jwk-set-url: ${JWK_SET_URL:http://localhost:8180/realms/tron-service/protocol/openid-connect/certs}
+  loki-url: http://localhost:3100/loki/api/v1/push
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+      enabled: true
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+    propagation:
+      type: b3
+  zipkin:
+    tracing:
+      endpoint: ${external.zipkin-endpoint}
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        all: true

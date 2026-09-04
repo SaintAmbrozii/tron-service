@@ -1,21 +1,6 @@
 
 
 services:
-  keycloak-postgres:
-    container_name: "keycloak-postgres"
-    image: postgres:16.2
-    networks:
-      - tron-network
-    environment:
-      - POSTGRES_DB=keycloak
-      - POSTGRES_USER=keycloak
-      - POSTGRES_PASSWORD=keycloak
-    ports:
-      - "5435:5435"
-    restart: unless-stopped
-    volumes:
-      - ./docker-config/postgres/data:/var/lib/postgresql/data:rw
-      - db:/var/lib/postgresql/data_keycloack
   keycloak:
     image: quay.io/keycloak/keycloak:23.0.7
     container_name: "keycloak"
@@ -23,15 +8,9 @@ services:
     networks:
       - tron-network
     command: start-dev --import-realm
-    depends_on:
-      - "keycloak-postgres"
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=password
-      - KEYCLOAK_DATABASE_NAME=keycloak
-      - KEYCLOAK_DATABASE_USER=keycloak
-      - KEYCLOAK_DATABASE_PASSWORD=keycloak
-      - KEYCLOAK_DATABASE_HOST=keycloak-postgres
     ports:
       - "8180:8080"
     volumes:
@@ -116,6 +95,48 @@ services:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:29092'
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+  prometheus:
+    image: "prom/prometheus:v2.53.5"
+    container_name: "prometheus"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: "grafana/grafana-oss:12.1.0"
+    container_name: "grafana"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - tempo
+      - loki
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    volumes:
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+
+  tempo:
+    image: grafana/tempo:2.4.2
+    command: -config.file=/etc/tempo.yml
+    container_name: tempo
+    ports:
+      - "3200:3200"   # tempo
+      - "9411:9411"   # zipkin
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo.yml
+
+  loki:
+    image: grafana/loki:3.5.5
+    command: -config.file=/etc/loki/local-config.yaml
+    container_name: loki
+    ports:
+      - "3100:3100"
+
 
 
 volumes:
