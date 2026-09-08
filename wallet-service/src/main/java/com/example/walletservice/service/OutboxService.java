@@ -31,7 +31,7 @@ public class OutboxService {
         this.kafkaConfig = kafkaConfig;
     }
 
-   // @Scheduled(fixedDelay = 1000)
+   // @Scheduled(fixedDelay = 60000)
     public void pollAndSend() {
 
         KafkaConfig.TopicConfig topicConfig = kafkaConfig.getTopics().getBankingTopic();

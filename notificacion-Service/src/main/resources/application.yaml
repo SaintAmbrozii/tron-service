@@ -54,6 +54,21 @@ user-client:
     trust-store-bundle-name: ""
     ssl-mode: NONE
 
+wallet-client:
+  nearest-path: "/api/v1/exchange/{id}"
+  config:
+    root-uri: http://localhost:8070
+    max-connections: 10
+    max-connections-per-route: 10
+    inactivity-seconds: 10
+    read-timeout: 5s
+    connect-timeout: 2s
+    connection-request-timeout: 1s
+    buffering-client-http-request-factory: true
+    key-store-bundle-name: ""
+    trust-store-bundle-name: ""
+    ssl-mode: NONE
+
 resilience4j:
   circuitbreaker:
     metrics:

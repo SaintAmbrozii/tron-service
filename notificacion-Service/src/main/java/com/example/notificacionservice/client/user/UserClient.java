@@ -1,4 +1,4 @@
-package com.example.notificacionservice.client;
+package com.example.notificacionservice.client.user;
 
 import com.example.notificacionservice.client.user.response.UserDto;
 

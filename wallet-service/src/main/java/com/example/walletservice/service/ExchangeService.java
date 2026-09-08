@@ -66,13 +66,6 @@ public class ExchangeService {
         try {
             userExchangeService.saveExchange(userId,address,user_card,rubAmount,currentBalance);
             walletService.updateBalance(address,currentBalance);
-            System.out.println("номер карты 3" + user_card);
-            OperationExchange response = OperationExchange.builder()
-                    .message("Обмен успешно произведен").
-                    usdt_amount(currentBalance.doubleValue())
-                    .rub_amount(rubAmount.doubleValue()).build();
-            System.out.println("Обмен успешно произведен");
-            sseService.sendNotification(userId, response);
         } finally {
             activePollings.remove(address);
             activePollingsGauge.decrementAndGet();

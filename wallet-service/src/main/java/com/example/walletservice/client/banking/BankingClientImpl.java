@@ -1,7 +1,8 @@
-package com.example.walletservice.client.usd;
+package com.example.walletservice.client.banking;
 
-import com.example.walletservice.client.UsdClient;
-import com.example.walletservice.client.usd.response.ResponseUsd;
+import com.example.walletservice.client.banking.payload.request.PaymentData;
+import com.example.walletservice.client.banking.payload.response.DataResponse;
+import com.example.walletservice.client.usd.AbstractClient;
 import com.example.walletservice.exception.RestClientNonRetryableException;
 import com.example.walletservice.exception.RestClientRetryableException;
 import com.example.walletservice.properties.UsdClientProperties;
@@ -10,8 +11,6 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -21,27 +20,28 @@ import static com.example.walletservice.utils.MaskingUtil.maskIfNeeded;
 
 @Slf4j
 @Component
-public class UsdClientImpl extends AbstractClient implements UsdClient {
+public class BankingClientImpl extends AbstractClient implements BankingClient {
 
-    private static final String USD_BACKEND = "usdBackend";
-    private static final String SERVICE_NAME = "exchange-service";
+    private static final String BANKING_BACKEND = "bankingBackend";
+    private static final String SERVICE_NAME = "banking-service";
     private final UsdClientProperties properties;
-    private final RestClient usdRestClient;
+    private final RestClient bankingRestClient;
 
-    public UsdClientImpl(@Autowired(required = false)ObjectMapper objectMapper, UsdClientProperties properties, RestClient usdRestClient) {
+    public BankingClientImpl(@Autowired(required = false) ObjectMapper objectMapper, UsdClientProperties properties, RestClient bankingRestClient) {
         super(objectMapper);
         this.properties = properties;
-        this.usdRestClient = usdRestClient;
+        this.bankingRestClient = bankingRestClient;
     }
 
-    @CircuitBreaker(name = USD_BACKEND)
-    @Retry(name = USD_BACKEND)
-    @Cacheable(value = "usdCourseCache")
+    @CircuitBreaker(name = BANKING_BACKEND)
+    @Retry(name = BANKING_BACKEND)
     @Override
-    public ResponseUsd getCourse() {
-        ResponseUsd body = usdRestClient.get()
+    public DataResponse getQrCode(PaymentData data) {
+
+        DataResponse body = bankingRestClient.post()
                 .uri(properties.getNearestPath())
-                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(data)
                 .retrieve()
                 .onStatus(org.springframework.http.HttpStatusCode::isError,
                         (org.springframework.http.HttpRequest request, org.springframework.http.client.ClientHttpResponse response) -> {
@@ -56,11 +56,11 @@ public class UsdClientImpl extends AbstractClient implements UsdClient {
                                 );
                             }
                         })
-                .body(ResponseUsd.class);
+                .body(DataResponse.class);
 
         Assert.notNull(body, "%s returned null body".formatted(SERVICE_NAME));
         log.info("{} returned {}", SERVICE_NAME, maskIfNeeded("body", body));
         return body;
+
     }
 }
-

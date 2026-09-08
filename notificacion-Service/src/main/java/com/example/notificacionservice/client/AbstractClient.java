@@ -1,4 +1,4 @@
-package com.example.notificacionservice.client.user;
+package com.example.notificacionservice.client;
 
 import com.example.notificacionservice.exception.RestClientNonRetryableException;
 import com.example.notificacionservice.exception.RestClientRetryableException;

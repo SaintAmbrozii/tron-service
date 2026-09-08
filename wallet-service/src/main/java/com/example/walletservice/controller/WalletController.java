@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -36,8 +37,15 @@ public class WalletController {
 
     @GetMapping
     public List<ExchangeDto> findByUserId(@RequestHeader(name = USER_ID_HEADER_NAME) String userId) {
-        log.info("Received GET request to exchange to rub. UserId {}",
+        log.info("Received GET request to exchanges to rub. UserId {}",
                 userId);
         return userExchangeService.getUserExchages(userId);
+    }
+
+    @GetMapping("{id}")
+    public ExchangeDto findById(@RequestParam(name = "id")UUID id) {
+        log.info("Received GET request to exchanges to rub. UserId {}", id);
+        return userExchangeService.findByUUID(id);
+
     }
 }

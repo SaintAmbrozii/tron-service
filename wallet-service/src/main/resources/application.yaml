@@ -136,9 +136,9 @@ resilience4j:
           seconds: 4
         minimum-number-of-calls: 15
     instances:
-      volunteerBackend:
+      usdBackend:
         base-config: default
-      trackingBackend:
+      bankingBackend:
         base-config: default
   retry:
     metrics:
