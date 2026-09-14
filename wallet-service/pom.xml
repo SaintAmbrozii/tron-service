@@ -21,7 +21,6 @@
       <!-- For io.confluent Jars not in maven central -->
         <repository>
             <id>confluent</id>
-            <!-- ИСПРАВЛЕНО: Изменено на https, иначе современные версии Maven заблокируют сборку -->
             <url>https://packages.confluent.io/maven/</url>
         </repository>
     </repositories>
@@ -38,7 +37,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        <!-- ИСПРАВЛЕНО: spring-boot-starter-aop заменен на spring-boot-starter-aspectj, актуальный для Spring Boot 4.x -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aspectj</artifactId>

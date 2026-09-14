@@ -1,9 +1,10 @@
 package com.example.walletservice.client.banking;
 
-import com.example.walletservice.client.banking.payload.request.PaymentData;
-import com.example.walletservice.client.banking.payload.response.DataResponse;
+
+import com.example.walletservice.client.banking.request.QrRequest;
+import com.example.walletservice.client.banking.response.QrResponse;
 
 public interface BankingClient {
 
-    DataResponse getQrCode(PaymentData data);
+    QrResponse getQrCode(QrRequest data,String userId,String aggregateId);
 }

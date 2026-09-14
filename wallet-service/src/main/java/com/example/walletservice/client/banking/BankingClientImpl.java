@@ -1,7 +1,7 @@
 package com.example.walletservice.client.banking;
 
-import com.example.walletservice.client.banking.payload.request.PaymentData;
-import com.example.walletservice.client.banking.payload.response.DataResponse;
+import com.example.walletservice.client.banking.request.QrRequest;
+import com.example.walletservice.client.banking.response.QrResponse;
 import com.example.walletservice.client.usd.AbstractClient;
 import com.example.walletservice.exception.RestClientNonRetryableException;
 import com.example.walletservice.exception.RestClientRetryableException;
@@ -36,11 +36,13 @@ public class BankingClientImpl extends AbstractClient implements BankingClient {
     @CircuitBreaker(name = BANKING_BACKEND)
     @Retry(name = BANKING_BACKEND)
     @Override
-    public DataResponse getQrCode(PaymentData data) {
+    public QrResponse getQrCode(QrRequest data,String userId,String aggregateId) {
 
-        DataResponse body = bankingRestClient.post()
+        QrResponse body = bankingRestClient.post()
                 .uri(properties.getNearestPath())
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("X-USER-ID",userId)
+                .header("X-AGGREGATE",aggregateId)
                 .body(data)
                 .retrieve()
                 .onStatus(org.springframework.http.HttpStatusCode::isError,
@@ -56,7 +58,7 @@ public class BankingClientImpl extends AbstractClient implements BankingClient {
                                 );
                             }
                         })
-                .body(DataResponse.class);
+                .body(QrResponse.class);
 
         Assert.notNull(body, "%s returned null body".formatted(SERVICE_NAME));
         log.info("{} returned {}", SERVICE_NAME, maskIfNeeded("body", body));

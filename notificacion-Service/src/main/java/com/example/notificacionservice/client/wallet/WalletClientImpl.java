@@ -32,6 +32,7 @@ public class WalletClientImpl extends AbstractClient implements WalletClient {
     @Retry(name = WALLET_BACKEND)
     @Override
     public ExchangeDto getExchange(UUID id) {
-        return null;
+        return
+                null;
     }
 }

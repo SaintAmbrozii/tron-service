@@ -108,10 +108,11 @@ resilience4j:
         base-config: default
 
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] ${spring.application.name} %highlight(%level) [traceId=%X{traceId}, spanId=%X{spanId}] %logger - %msg%n"
+    level: "%5p"
   level:
-    org.springframework.kafka: DEBUG
-    org.apache.kafka: WARN
-
+    web: info
 
 external:
   zipkin-endpoint: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}

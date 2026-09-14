@@ -73,6 +73,18 @@ public class UserExchangeService {
         }
     }
 
+    public String saveExchangeToUsd(String userId, BigDecimal rubAmount, BigDecimal usdt,String wallet) {
+        Exchange exchange = Exchange.builder()
+                .userId(userId)
+                .rubAmount(rubAmount)
+                .usdAmount(usdt)
+                .userWallet(wallet)
+                .status(false).build();
+        Exchange saved = exchangeRepo.save(exchange);
+
+        return saved.getId().toString();
+    }
+
     public List<ExchangeDto> getUserExchages(String userId){
         return exchangeRepo.findAllByUserId(userId).stream().map(ExchangeDto::toDto).collect(Collectors.toList());
     }

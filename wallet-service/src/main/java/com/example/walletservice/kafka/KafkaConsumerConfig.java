@@ -41,7 +41,6 @@ public class KafkaConsumerConfig {
         Map<String, Object> props = new HashMap<>();
         props.put(org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
         props.put(org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        // Используем ByteArraySerializer вместо KafkaAvroSerializer для безопасности DLT
         props.put(org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class);
 
         ProducerFactory<Object, Object> factory = new DefaultKafkaProducerFactory<>(props);

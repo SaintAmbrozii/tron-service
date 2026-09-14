@@ -34,6 +34,10 @@ public class ApiExchangeSerivce {
         return getUsdCourse().getValue() * amount;
     }
 
+    public double convertRubToUsd(double amount) {
+        return amount / getUsdCourse().getValue();
+    }
+
 
 
 }

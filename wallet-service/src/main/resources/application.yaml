@@ -79,21 +79,20 @@ kafka-properties:
 
 
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] ${spring.application.name} %highlight(%level) [traceId=%X{traceId}, spanId=%X{spanId}] %logger - %msg%n"
+    level: "%5p"
   level:
-    org.flywaydb.core: DEBUG
-    org.springframework.boot.autoconfigure.flyway: INFO
-    org.springframework.kafka: DEBUG
-    org.apache.kafka: WARN
-
+    web: info
 
 tron:
   private-key: "4a6213c5c05dd3dc8793837dde88b74bd9a45b1b9dc7663f21b771bdd56ad50b"
   owner: "TUoHaVjx7n5xz8LwPRDckgFrDWhMhuSuJM"
 
 banking-client:
-  nearest-path: "/api/v1/banking/toSbp"
+  nearest-path: "/api/v1/payments/toSbp"
   config:
-    root-uri: http://localhost:8070
+    root-uri: http://localhost:8050
     max-connections: 10
     max-connections-per-route: 10
     inactivity-seconds: 10

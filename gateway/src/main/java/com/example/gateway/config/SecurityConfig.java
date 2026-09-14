@@ -36,6 +36,7 @@ public class SecurityConfig {
                                 // обменник
                                 .pathMatchers(HttpMethod.GET, "/api/v1/exchange/toRub").hasAnyRole("USER","ADMIN")
                                 .pathMatchers(HttpMethod.POST, "/api/v1/exchange/toRub").hasAnyRole("USER","ADMIN")
+                                .pathMatchers(HttpMethod.POST, "/api/v1/exchange/toUsd").hasAnyRole("USER","ADMIN")
                                 // платежки
                                 .pathMatchers(HttpMethod.POST, "/api/v1/payments/**").hasRole("ADMIN")
                                 .pathMatchers(HttpMethod.GET, "/api/v1/payments/**").hasRole("ADMIN")

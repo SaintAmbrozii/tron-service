@@ -1,5 +1,13 @@
 package com.example.walletservice.service;
 
+import com.example.walletservice.client.banking.BankingClient;
+import com.example.walletservice.client.banking.request.DataPayment;
+import com.example.walletservice.client.banking.request.ImageParams;
+import com.example.walletservice.client.banking.request.QrRequest;
+import com.example.walletservice.client.banking.request.SpbData;
+import com.example.walletservice.client.banking.response.QrResponse;
+import com.example.walletservice.domain.Exchange;
+import com.example.walletservice.repo.ExchangeRepo;
 import com.example.walletservice.tronclient.TronClient;
 import com.example.walletservice.dto.OperationExchange;
 import com.example.walletservice.dto.RequestExchangeToRub;
@@ -24,6 +32,8 @@ public class ExchangeService {
 
     private static final String owner_private_key = "4a6213c5c05dd3dc8793837dde88b74bd9a45b1b9dc7663f21b771bdd56ad50b";
     private static final String usdtContractAddress = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf";
+    private static final String accountId = "12345810901234567890/044525104";
+    private static final String merchantId = "MF0000000001";
 
     private final WalletService walletService;
     private final ApiExchangeSerivce cbRfService;
@@ -31,18 +41,21 @@ public class ExchangeService {
     private final PollingService pollingService;
     private final SseService sseService;
     private final Map<String, Boolean> activePollings = new ConcurrentHashMap<>();
-    private static final int MAX_SIMULTANEOUS_POLLINGS = 100;
     private final AtomicInteger activePollingsGauge;
+    private final BankingClient bankingClient;
+    private final ExchangeRepo exchangeRepo;
 
-    public ExchangeService(WalletService walletService, TronClient tronClient, ApiExchangeSerivce cbRfService, UserExchangeService userExchangeService,
+    public ExchangeService(WalletService walletService, ApiExchangeSerivce cbRfService, UserExchangeService userExchangeService,
                            PollingService pollingService, SseService sseService,
-                           MeterRegistry meterRegistry) {
+                           MeterRegistry meterRegistry, BankingClient bankingClient, ExchangeRepo exchangeRepo) {
         this.walletService = walletService;
         this.cbRfService = cbRfService;
         this.userExchangeService = userExchangeService;
         this.pollingService = pollingService;
         this.sseService = sseService;
         this.activePollingsGauge = meterRegistry.gauge("trident_active_pollings", new AtomicInteger(0));
+        this.bankingClient = bankingClient;
+        this.exchangeRepo = exchangeRepo;
     }
 
 
@@ -60,6 +73,40 @@ public class ExchangeService {
 
     }
 
+    public QrResponse getQRRubToUsd (DataPayment payment, String userId) {
+
+        SpbData paymentData = SpbData.builder()
+                .amount(payment.getAmount())
+                .currency("RUB")
+                .qrcType("02")
+                .sourceName("string")
+                .paymentPurpose("Bill")
+                .customerCode(accountId)
+                .merchantId(merchantId)
+                .imageParams(ImageParams.builder().height(200).width(200).mediaType("image/png").build()).build();
+
+        QrRequest request = QrRequest.builder().data(paymentData).build();
+
+        double rubAmount = Double.valueOf(payment.getAmount())/100;
+
+        BigDecimal usdAmount = BigDecimal.valueOf(cbRfService.convertRubToUsd(rubAmount))
+                        .setScale(2,RoundingMode.HALF_UP);
+
+        Exchange exchange = Exchange.builder()
+                .userId(userId)
+                .rubAmount(BigDecimal.valueOf(rubAmount))
+                .usdAmount(usdAmount)
+                .userWallet(payment.getWallet())
+                .status(false).build();
+
+        Exchange saved = exchangeRepo.save(exchange);
+
+        QrResponse response = bankingClient.getQrCode(request, userId, saved.getId().toString());
+
+        sseService.createEmitter(userId);
+
+        return response;
+    }
 
 
     private void handleSuccess(String address, String userId,String user_card, BigDecimal currentBalance, BigDecimal rubAmount) {
@@ -88,27 +135,6 @@ public class ExchangeService {
         this.activePollings.clear();
     }
 
-    private BigDecimal getWalletBalance(String address) {
-
-        ApiWrapper client = ApiWrapper.ofNile(owner_private_key);
-        // 3. Адрес вашего кошелька
-        String userWalletAddress = address;
-        // 4. Подготовка вызова функции balanceOf в смарт-контракте
-        Contract tokenContract = client.getContract(usdtContractAddress);
-        // 3. Используем обертку Trc20Contract для удобной работы с токеном
-        Trc20Contract usdtToken = new Trc20Contract(tokenContract, usdtContractAddress, client);
-        // 4. Запрашиваем баланс (возвращается в минимальных неделимых единицах)
-        BigInteger rawBalance = usdtToken.balanceOf(userWalletAddress);
-        // 5. Конвертируем в привычный формат (у USDT 6 знаков после запятой)
-        BigDecimal usdtBalance = new BigDecimal(rawBalance).divide(new BigDecimal("1000000"));
-
-        try {
-            client.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return usdtBalance;
-    }
 
 
 }

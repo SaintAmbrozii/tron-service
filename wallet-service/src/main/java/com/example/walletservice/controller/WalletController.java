@@ -1,5 +1,8 @@
 package com.example.walletservice.controller;
 
+
+import com.example.walletservice.client.banking.request.DataPayment;
+import com.example.walletservice.client.banking.response.QrResponse;
 import com.example.walletservice.domain.Exchange;
 import com.example.walletservice.dto.ExchangeDto;
 import com.example.walletservice.dto.RequestExchangeToRub;
@@ -35,6 +38,13 @@ public class WalletController {
         return exchangeService.getUsd_exchange(userId,exchange);
     }
 
+    @PostMapping("toUsd")
+    public QrResponse getQtPay(@RequestBody DataPayment payment, @RequestHeader(name = USER_ID_HEADER_NAME) String userId) {
+        log.info("Received POST request to exchange to usd. UserId {}, request {}",
+                userId, payment);
+        return exchangeService.getQRRubToUsd(payment, userId);
+    }
+
     @GetMapping
     public List<ExchangeDto> findByUserId(@RequestHeader(name = USER_ID_HEADER_NAME) String userId) {
         log.info("Received GET request to exchanges to rub. UserId {}",
@@ -48,4 +58,6 @@ public class WalletController {
         return userExchangeService.findByUUID(id);
 
     }
+
+
 }

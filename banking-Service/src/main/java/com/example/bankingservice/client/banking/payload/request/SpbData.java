@@ -1,16 +1,18 @@
-package com.example.walletservice.client.banking.payload.request;
+package com.example.bankingservice.client.banking.payload.request;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class PaymentData {
+public class SpbData {
 
     private String merchantId;
     private String legalId;
     private String customerCode;
-    private Double amount;
+    private Integer amount;
     private String currency;
     private String paymentPurpose;
     private String qrcType;

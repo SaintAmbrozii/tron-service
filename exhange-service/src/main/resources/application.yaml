@@ -12,9 +12,11 @@ spring:
 
 cb_uri: "https://www.cbr-xml-daily.ru/daily_json.js"
 
+
 external:
   zipkin-endpoint: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}
   loki-url: ${LOKI_URL:http://localhost:3100/loki/api/v1/push}
+
 
 management:
   endpoints:
@@ -38,3 +40,10 @@ management:
     distribution:
       percentiles-histogram:
         all: true
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] ${spring.application.name} %highlight(%level) [traceId=%X{traceId}, spanId=%X{spanId}] %logger - %msg%n"
+    level: "%5p"
+  level:
+    web: info

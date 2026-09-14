@@ -59,3 +59,10 @@ management:
     distribution:
       percentiles-histogram:
         all: true
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] ${spring.application.name} %highlight(%level) [traceId=%X{traceId}, spanId=%X{spanId}] %logger - %msg%n"
+    level: "%5p"
+  level:
+    web: info
