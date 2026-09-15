@@ -45,6 +45,10 @@ public class ListenerService {
         try {
 
             UUID uuid = event.getAggregateId();
+            if (event.getStatus().equals("payment")){
+
+
+            }
             if (uuid != null) {
                 // Передаем UUID напрямую в бизнес-логику без конвертаций
                 exchangeService.updateExchande(uuid);

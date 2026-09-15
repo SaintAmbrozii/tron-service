@@ -48,7 +48,6 @@ public class RestClientFactoryImpl implements RestClientFactory {
         this.observationConvention = new DefaultClientRequestObservationConvention();
     }
 
-    @Bean
     @Override
     public RestClient create(RestClientProperties properties) {
 

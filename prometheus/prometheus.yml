@@ -2,7 +2,6 @@ global:
   scrape_interval: 2s
   scrape_timeout: 2s
 
-
 scrape_configs:
   - job_name: "prometheus"
     static_configs:
@@ -24,16 +23,16 @@ scrape_configs:
       - targets: [ 'banking-service:8050' ]
 
   - job_name: 'notification-service'
-      metrics_path: '/actuator/prometheus'
-      static_configs:
-        - targets: [ 'notification-service:8100' ]
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'notification-service:8100' ]
 
   - job_name: 'gateway-service'
-      metrics_path: '/actuator/prometheus'
-      static_configs:
-        - targets: [ 'gateway-service:8080' ]
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'gateway-service:8080' ]
 
   - job_name: 'usd-service'
-      metrics_path: '/actuator/prometheus'
-      static_configs:
-        - targets: [ 'usd-service:8040' ]
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'usd-service:8040' ]

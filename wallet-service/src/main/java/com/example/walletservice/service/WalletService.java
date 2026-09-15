@@ -1,6 +1,8 @@
 package com.example.walletservice.service;
 
 import com.example.walletservice.domain.Wallet;
+import com.example.walletservice.event.TransferEvent;
+import com.example.walletservice.event.WalletTransferListener;
 import com.example.walletservice.repo.WalletRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,10 +31,12 @@ public class WalletService {
 
     private final WalletRepo walletRepo;
     private final ApiWrapper apiWrapper;
+    private final WalletTransferListener walletTransferListener;
 
-    public WalletService(WalletRepo walletRepo, ApiWrapper apiWrapper) {
+    public WalletService(WalletRepo walletRepo, ApiWrapper apiWrapper, WalletTransferListener walletTransferListener) {
         this.walletRepo = walletRepo;
         this.apiWrapper = apiWrapper;
+        this.walletTransferListener = walletTransferListener;
     }
 
     public String generate(String userId) {
@@ -92,7 +96,7 @@ public class WalletService {
         Wallet inDB = walletRepo.findByAddress(walletAddress);
         inDB.setAmount(balance);
         walletRepo.save(inDB);
-
+        walletTransferListener.onApplicationEvent(new TransferEvent(inDB.getId()));
     }
 
 
@@ -133,7 +137,8 @@ public class WalletService {
 
 
 
-    public void transferUsdToAdminWallet(String childPrivateKey, String childAddress, BigDecimal usdtAmount) throws Exception {
+    public void transferUsdToAdminWallet(String childPrivateKey, String childAddress, BigDecimal usdtAmount)
+            throws Exception {
         log.info("[ПАЙПЛАЙН] Начало эвакуации {} USDT с кошелька {}", usdtAmount, childAddress);
 
         long trxAmountSun = 80_000_000L; // 80 TRX

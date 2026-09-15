@@ -9,6 +9,7 @@ import com.example.walletservice.dto.RequestExchangeToRub;
 import com.example.walletservice.dto.ResponseExchangeToRub;
 import com.example.walletservice.service.ExchangeService;
 import com.example.walletservice.service.UserExchangeService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +32,7 @@ public class WalletController {
     }
 
     @PostMapping("toRub")
-    public ResponseExchangeToRub usdToRub(@RequestBody RequestExchangeToRub exchange,
+    public ResponseExchangeToRub usdToRub(@RequestBody @Valid RequestExchangeToRub exchange,
                                           @RequestHeader(name = USER_ID_HEADER_NAME) String userId) {
         log.info("Received POST request to exchange to rub. UserId {}, request {}",
                 userId, exchange);
@@ -39,7 +40,7 @@ public class WalletController {
     }
 
     @PostMapping("toUsd")
-    public QrResponse getQtPay(@RequestBody DataPayment payment, @RequestHeader(name = USER_ID_HEADER_NAME) String userId) {
+    public QrResponse getQtPay(@RequestBody @Valid DataPayment payment, @RequestHeader(name = USER_ID_HEADER_NAME) String userId) {
         log.info("Received POST request to exchange to usd. UserId {}, request {}",
                 userId, payment);
         return exchangeService.getQRRubToUsd(payment, userId);

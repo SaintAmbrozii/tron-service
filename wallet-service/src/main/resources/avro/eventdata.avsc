@@ -17,6 +17,11 @@
           }
         ],
         "default": null
+      },
+      {
+        "name": "status",
+        "type": "string"
       }
+
     ]
 }

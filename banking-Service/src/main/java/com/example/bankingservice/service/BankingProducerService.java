@@ -33,7 +33,7 @@ public class BankingProducerService {
         KafkaConfig.TopicConfig topicConfig = kafkaConfig.getTopics().getBankingNotification();
 
         PaymentDataEvent event = PaymentDataEvent.newBuilder()
-                .setUserId(userid).setAggregateId(uuid).build();
+                .setUserId(userid).setAggregateId(uuid).setStatus("success").build();
 
 
         ProducerRecord<String, PaymentDataEvent> record = new ProducerRecord<>(
@@ -49,18 +49,6 @@ public class BankingProducerService {
         }catch (Exception e) {
             log.error("КОНКРЕТНЫЙ КЛАСС ИСКЛЮЧЕНИЯ КАФКИ: {}", e.getCause() != null ? e.getCause().getClass().getName() : e.getClass().getName());
             log.error("ТЕКСТ ОШИБКИ: {}", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
-            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            System.err.println("!!! КРИТИЧЕСКИЙ СБОЙ ДВИЖКА КАФКИ МЕЖДУ СЕРВИСАМИ !!!");
-
-            // Вытаскиваем КЛАСС оригинальной ошибки (например, TimeoutException, ConnectException)
-            if (e.getCause() != null) {
-                System.err.println("КЛАСС КОРНЕВОЙ ОШИБКИ: " + e.getCause().getClass().getName());
-                System.err.println("СООБЩЕНИЕ ОШИБКИ: " + e.getCause().getMessage());
-            } else {
-                System.err.println("КЛАСС ОШИБКИ: " + e.getClass().getName());
-                System.err.println("СООБЩЕНИЕ ОШИБКИ: " + e.getMessage());
-            }
-            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
             // Печатаем ПОЛНЫЙ стек-трейс, чтобы увидеть, какая именно строка внутри библиотек упала
             e.printStackTrace();

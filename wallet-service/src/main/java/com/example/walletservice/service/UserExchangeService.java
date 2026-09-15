@@ -27,7 +27,7 @@ public class UserExchangeService {
     private final BankingTransactionListener bankingTransactionListener;
     private final SseService sseService;
 
-    public UserExchangeService(ExchangeRepo exchangeRepo, OutboxRepo outboxRepo, BankingTransactionListener bankingTransactionListener, SseService sseService) {
+    public UserExchangeService(ExchangeRepo exchangeRepo, OutboxRepo outboxRepo,BankingTransactionListener bankingTransactionListener, SseService sseService) {
         this.exchangeRepo = exchangeRepo;
         this.outboxRepo = outboxRepo;
         this.bankingTransactionListener = bankingTransactionListener;
@@ -70,6 +70,14 @@ public class UserExchangeService {
                     .rub_amount(updated.getRubAmount().doubleValue()).build();
             System.out.println("Обмен успешно произведен");
             sseService.sendNotification(updated.getUserId(), response);
+        }
+    }
+
+    public void findExchangeByIdAndTransfer(UUID id) {
+        Optional<Exchange> exchange = exchangeRepo.findById(id);
+        if (exchange.isPresent()){
+            Exchange inDB = exchange.get();
+
         }
     }
 
