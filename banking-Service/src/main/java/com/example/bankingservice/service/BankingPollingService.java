@@ -44,7 +44,7 @@ public class BankingPollingService {
                     String status = bankingService.getStatus(qrId);
 
                     if (status.equals("Active")) {
-                        bankingService.createPayment(uuid);
+                        bankingService.createPaymentAndTransfer(uuid);
 
                         futureHolder[0].cancel(false); // Останавливаем поллинг
                     }

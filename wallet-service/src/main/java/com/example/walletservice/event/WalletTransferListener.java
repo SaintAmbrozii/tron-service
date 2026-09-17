@@ -1,11 +1,9 @@
 package com.example.walletservice.event;
 
 import com.example.walletservice.domain.Wallet;
-import com.example.walletservice.repo.WalletRepo;
-import com.example.walletservice.service.WalletService;
+import com.example.walletservice.service.BlockChainWalletService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -14,37 +12,27 @@ import java.util.Optional;
 
 @Slf4j
 @Component
-public class WalletTransferListener implements ApplicationListener<TransferEvent> {
+public class WalletTransferListener {
 
-    private final WalletRepo walletRepo;
-    private final WalletService walletService;
+    private final BlockChainWalletService blockChainWalletService;
 
-    public WalletTransferListener(WalletRepo walletRepo,@Lazy WalletService walletService) {
-        this.walletRepo = walletRepo;
-        this.walletService = walletService;
+    public WalletTransferListener(BlockChainWalletService blockChainWalletService) {
+        this.blockChainWalletService = blockChainWalletService;
     }
 
-    @Override
+    @Async("blockchainTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onApplicationEvent(TransferEvent event) {
 
-        transfer(event);
-
-    }
-
-    private void transfer(TransferEvent event) {
-
-        Optional<Wallet> wallet = walletRepo.findById(event.getWalletId());
-        if (wallet.isPresent()) {
-            Wallet inDB = wallet.get();
-            try {
-                walletService.transferUsdToAdminWallet(inDB.getPrivatKey(),inDB.getAddress(),inDB.getAmount());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        try {
+            blockChainWalletService.transferUsdToAdminWallet(event.privatKey(),event.address(),event.amount());
+            log.info("Transfer completed for wallet {}, amount {}",
+                    event.address(), event.amount());
+        } catch (Exception e) {
+            log.error("Transfer failed for wallet {}, amount {}",
+                    event.address(), event.amount(), e);
         }
 
     }
-
 
 }

@@ -25,12 +25,11 @@ import java.math.BigDecimal;
 
 public class ListenerService {
 
-    private final PaymentsRepo paymentsRepo;
+
     private final KafkaConfig kafkaConfig;
     private final BankingService bankingService;
 
-    public ListenerService(PaymentsRepo paymentsRepo, KafkaConfig kafkaConfig, BankingService bankingService) {
-        this.paymentsRepo = paymentsRepo;
+    public ListenerService(KafkaConfig kafkaConfig, BankingService bankingService) {
         this.kafkaConfig = kafkaConfig;
         this.bankingService = bankingService;
     }

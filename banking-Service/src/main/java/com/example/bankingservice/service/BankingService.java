@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
@@ -61,8 +63,32 @@ public class BankingService {
             UUID aggregateId = update.getAggregateId();
             String userId = update.getUserId();
 
-            producerService.sendNotification(aggregateId, userId);
-            userProducerService.sendUserNotification(aggregateId,userId);
+            producerService.sendNotification(aggregateId, userId,"success");
+            userProducerService.sendUserNotification(aggregateId,userId,"success");
+
+        }
+    }
+
+    @Transactional
+    public void createPaymentAndTransfer(UUID uuid) {
+        Optional<Payments> payments = paymentsRepo.findById(uuid);
+
+        if (payments.isPresent()) {
+            Payments update = payments.get();
+            update.setStatus(true);
+            paymentsRepo.save(update);
+
+            UUID aggregateId = update.getAggregateId();
+            String userId = update.getUserId();
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    // Этот код выполнится строго после того, как БД скажет "ОК"
+                    producerService.sendNotification(aggregateId, userId, "payment");
+                    userProducerService.sendUserNotification(aggregateId, userId, "payment");
+                }
+            });
 
         }
     }

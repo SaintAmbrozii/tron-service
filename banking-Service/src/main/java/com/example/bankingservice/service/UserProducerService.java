@@ -27,12 +27,13 @@ public class UserProducerService {
     }
 
 
-    public void sendUserNotification(UUID uuid,String userid){
+    public void sendUserNotification(UUID uuid,String userid,String message){
 
         KafkaConfig.TopicConfig topicConfig = kafkaConfig.getTopics().getUserNotification();
 
         PaymentDataEvent event = PaymentDataEvent.newBuilder()
-                .setUserId(userid).setAggregateId(uuid).build();
+                .setUserId(userid).setAggregateId(uuid)
+                .setStatus(message).build();
 
         ProducerRecord<String, PaymentDataEvent> record = new ProducerRecord<>(
                 topicConfig.getName(),

@@ -7,6 +7,7 @@ import com.example.walletservice.client.banking.request.QrRequest;
 import com.example.walletservice.client.banking.request.SpbData;
 import com.example.walletservice.client.banking.response.QrResponse;
 import com.example.walletservice.domain.Exchange;
+import com.example.walletservice.domain.Status;
 import com.example.walletservice.repo.ExchangeRepo;
 import com.example.walletservice.tronclient.TronClient;
 import com.example.walletservice.dto.OperationExchange;
@@ -97,7 +98,7 @@ public class ExchangeService {
                 .rubAmount(BigDecimal.valueOf(rubAmount))
                 .usdAmount(usdAmount)
                 .userWallet(payment.getWallet())
-                .status(false).build();
+                .status(Status.CREATED).build();
 
         Exchange saved = exchangeRepo.save(exchange);
 

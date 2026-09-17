@@ -44,17 +44,20 @@ public class ListenerService {
         log.info("In manual commit mode. Received OutboxBankingEventV1 {}", event);
         try {
 
-            UUID uuid = event.getAggregateId();
             if (event.getStatus().equals("payment")){
 
+                exchangeService.getExchangeToTransfer(event.getAggregateId());
+
+                acknowledgment.acknowledge();
+                log.info("Successfully processed PaymentDataEvent for UUID: {}. Offset acknowledged.",event.getAggregateId());
 
             }
-            if (uuid != null) {
+            if (event.getStatus().equals("success")) {
                 // Передаем UUID напрямую в бизнес-логику без конвертаций
-                exchangeService.updateExchande(uuid);
+                exchangeService.updateExchande(event.getAggregateId());
                 // Фиксируем смещение (Offset) в Kafka
                 acknowledgment.acknowledge();
-                log.info("Successfully processed PaymentDataEvent for UUID: {}. Offset acknowledged.", uuid);
+                log.info("Successfully processed PaymentDataEvent for UUID: {}. Offset acknowledged.",event.getAggregateId());
 
             } else {
                 log.error("Received PaymentDataEvent with null aggregateId. Message will be acknowledged to avoid blockage.");

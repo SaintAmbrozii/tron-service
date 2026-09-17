@@ -5,6 +5,7 @@ import com.example.walletservice.event.TransferEvent;
 import com.example.walletservice.event.WalletTransferListener;
 import com.example.walletservice.repo.WalletRepo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.tron.trident.core.ApiWrapper;
@@ -31,11 +32,13 @@ public class WalletService {
 
     private final WalletRepo walletRepo;
     private final ApiWrapper apiWrapper;
+    private final ApplicationEventPublisher eventPublisher;
     private final WalletTransferListener walletTransferListener;
 
-    public WalletService(WalletRepo walletRepo, ApiWrapper apiWrapper, WalletTransferListener walletTransferListener) {
+    public WalletService(WalletRepo walletRepo, ApiWrapper apiWrapper, ApplicationEventPublisher eventPublisher, WalletTransferListener walletTransferListener) {
         this.walletRepo = walletRepo;
         this.apiWrapper = apiWrapper;
+        this.eventPublisher = eventPublisher;
         this.walletTransferListener = walletTransferListener;
     }
 
@@ -95,132 +98,15 @@ public class WalletService {
     public void updateBalance(String walletAddress, BigDecimal balance) {
         Wallet inDB = walletRepo.findByAddress(walletAddress);
         inDB.setAmount(balance);
-        walletRepo.save(inDB);
-        walletTransferListener.onApplicationEvent(new TransferEvent(inDB.getId()));
-    }
+        Wallet updated = walletRepo.save(inDB);
 
-
-    public void transferUsdtToWallet(String targetAddress, BigDecimal amount)  {
-        log.info("[ПЕРЕВОД USDT] Отправка {} USDT на кошелек {}...", amount, targetAddress);
-
-        // 1. Валидация входных данных
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Сумма перевода должна быть больше нуля");
-        }
-        if (targetAddress == null || targetAddress.isEmpty()) {
-            throw new IllegalArgumentException("Адрес получателя не может быть пустым");
-        }
-
-        BigInteger rawAmount = amount.multiply(new BigDecimal(1_000_000)).toBigInteger();
-
-        try {
-            // 4. Инициализируем контракт USDT через враппер отправителя
-            Contract smartContract = apiWrapper.getContract(usdtContractAddres);
-            Trc20Contract usdtToken = new Trc20Contract(smartContract, OWNER_ADDRESS, apiWrapper);
-            // 5. Устанавливаем лимит газа (100 TRX в единицах SUN)
-            // Для USDT этого лимита всегда достаточно, неиспользованный TRX вернется на кошелек
-            long feeLimit = 100_000_000L;
-            // 6. Вызываем встроенный метод transfer из Trident SDK
-            // Сигнатура: (получатель, сумма_long, power, комментарий, лимит_газа)
-            String txId = usdtToken.transfer(targetAddress, rawAmount.longValue(), 0, "External Transfer", feeLimit);
-            // 7. Проверяем, вернула ли сеть хэш транзакции
-            if (txId == null || txId.isEmpty()) {
-                throw new RuntimeException("Сеть TRON вернула пустой или невалидный TX ID.");
-            }
-            log.info("[УСПЕХ] Транзакция отправлена в сеть. TxID: {}", txId);
-
-        }
-        catch (Exception e) {
-            log.info("[УСПЕХ] Транзакция не случалась в сеть");
-        }
+        eventPublisher.publishEvent(new TransferEvent(updated.getId(),updated.getAddress(),updated.getPrivatKey(),updated.getAmount()));
     }
 
 
 
-    public void transferUsdToAdminWallet(String childPrivateKey, String childAddress, BigDecimal usdtAmount)
-            throws Exception {
-        log.info("[ПАЙПЛАЙН] Начало эвакуации {} USDT с кошелька {}", usdtAmount, childAddress);
 
-        long trxAmountSun = 80_000_000L; // 80 TRX
 
-        // --- ЭТАП 1: Пополнение дочернего кошелька TRX для оплаты fee ---
-        Response.TransactionExtention trxTxExt = apiWrapper.transfer(OWNER_ADDRESS, childAddress, trxAmountSun);
-        Chain.Transaction signedTrxTx = apiWrapper.signTransaction(trxTxExt);
-        String trxTxId = apiWrapper.broadcastTransaction(signedTrxTx);
-
-        if (trxTxId == null || trxTxId.isEmpty()) {
-            throw new RuntimeException("Блокчейн отклонил транзакцию пополнения TRX");
-        }
-        log.info("[ЭТАП 1] TRX отправлен. TxID: {}. Ожидание подтверждения...", trxTxId);
-
-        if (!waitForConfirmation(apiWrapper, trxTxId)) {
-            throw new RuntimeException("TRX-пополнение не подтвердилось. Отмена.");
-        }
-        log.info("[ЭТАП 1] TRX подтверждён.");
-
-        // --- ЭТАП 2: Перевод USDT с дочернего на родительский ---
-        BigInteger rawUsdtAmount = usdtAmount.multiply(new BigDecimal(1_000_000)).toBigInteger();
-
-        ApiWrapper childApiWrapper = null;
-        try {
-            childApiWrapper = ApiWrapper.ofNile(childPrivateKey);
-            Contract smartContract = childApiWrapper.getContract(usdtContractAddres);
-            Trc20Contract usdtToken = new Trc20Contract(smartContract, childAddress, childApiWrapper);
-
-            long feeLimit = 100_000_000L;
-            String usdtTxId = usdtToken.transfer(
-                    OWNER_ADDRESS,
-                    rawUsdtAmount.longValueExact(),
-                    0,
-                    "Sweep to Parent",
-                    feeLimit
-            );
-
-            if (usdtTxId == null || usdtTxId.isEmpty()) {
-                throw new RuntimeException("Пустой TX ID для USDT-перевода");
-            }
-            log.info("[ЭТАП 2] USDT отправлен. TxID: {}. Ожидание подтверждения...", usdtTxId);
-
-            if (!waitForConfirmation(childApiWrapper, usdtTxId)) {
-                throw new RuntimeException(
-                        "USDT-перевод не подтвердился. TRX уже потрачены на fee. " +
-                                "Требуется ручная проверка кошелька: " + childAddress
-                );
-            }
-
-            log.info("[ПАЙПЛАЙН ЗАВЕРШЕН] USDT эвакуированы. TxID: {}", usdtTxId);
-            System.out.println(usdtTxId);
-
-        } finally {
-            if (childApiWrapper != null) {
-                childApiWrapper.close();
-            }
-        }
-    }
-
-    private boolean waitForConfirmation(ApiWrapper client, String txId) {
-        int maxAttempts = 12; // 12 попыток * 3 секунды = 36 секунд максимум
-        int delayMs = 3000;   // Время генерации блока в TRON в среднем 3 секунды
-
-        for (int i = 0; i < maxAttempts; i++) {
-            try {
-                Thread.sleep(delayMs);
-                Response.TransactionInfo info = client.getTransactionInfoById(txId);
-
-                if (info != null) {
-                    if (info.getResultValue() == 0) { // 0 означает SUCCESS в кодах TRON
-                        return true;
-                    } else {
-                        log.error("Транзакция пополнения TRX завалилась на ноде с кодом ошибки: {}", info.getResultValue());
-                        return false;
-                    }
-                }
-            } catch (Exception e) {
-                log.debug("Транзакция {} еще не попала в блок, ожидаем... (Попытка {})", txId, i + 1);
-            }
-        }
-        return false;
-    }
 
 
 

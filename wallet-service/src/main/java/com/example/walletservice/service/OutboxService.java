@@ -5,9 +5,11 @@ import com.example.walletservice.config.KafkaConfig;
 import com.example.walletservice.domain.Outbox;
 import com.example.walletservice.repo.OutboxRepo;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 
@@ -31,7 +33,8 @@ public class OutboxService {
         this.kafkaConfig = kafkaConfig;
     }
 
-   // @Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 30000)
+    @SchedulerLock(name = "cleanOutboxQueue", lockAtMostFor = "5m", lockAtLeastFor = "10s")
     public void pollAndSend() {
 
         KafkaConfig.TopicConfig topicConfig = kafkaConfig.getTopics().getBankingTopic();
@@ -56,10 +59,12 @@ public class OutboxService {
 
                     log.info("Successfully sent event {} to kafka.", outboxDataEvent);
 
-                    System.out.println(outboxList.size());
+                    outboxRepo.deleteById(outbox.getId());
 
                 }catch (Exception e) {
-                    throw new RuntimeException("Сбой отправки сообщений в кафку");
+
+                    log.error("[OUTBOX-ШЕДУЛЕР] Сбой отправки отложенного сообщения {} в Kafka. " +
+                            "Оно остается в БД до следующего цикла. Причина: {}", outbox.getId(), e.getMessage());
                 }
             }
         }

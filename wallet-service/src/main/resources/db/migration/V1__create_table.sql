@@ -7,14 +7,26 @@ CREATE TABLE IF NOT EXISTS wallets(id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
 
 CREATE TABLE IF NOT EXISTS exchanges(
+
                           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                           user_id VARCHAR NOT NULL,
                           user_wallet VARCHAR NOT NULL ,
+                          status VARCHAR(50) NOT NULL,
+                          retry_count INT NOT NULL DEFAULT 0,
+                          tx_id VARCHAR(255),                    --
+                          fail_reason TEXT,
                           rub_amount NUMERIC(10,2) ,
                           usd_amount NUMERIC(10,2),
-                          status BOOLEAN,
-                          create_date TIMESTAMPTZ DEFAULT now()
+                          create_date TIMESTAMPTZ DEFAULT now(),
+
+                          CONSTRAINT chk_status
+                              CHECK (status IN ('CREATED','PROCESSING', 'COMPLETED', 'PENDING_RETRY', 'FAILED'))
+
 );
+
+CREATE INDEX IF NOT EXISTS idx_exchanges_retry_status
+    ON exchanges (status)
+    WHERE status = 'PENDING_RETRY';
 
 CREATE TABLE IF NOT EXISTS outbox(
 
@@ -27,21 +39,13 @@ CREATE TABLE IF NOT EXISTS outbox(
                        create_date TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS debezium_heartbeat (
-                                                  id INTEGER PRIMARY KEY,
-                                                  updated_at TIMESTAMP NOT NULL
+CREATE TABLE IF NOT EXISTS shedlock (
+                          name VARCHAR(64) NOT NULL,
+                          lock_until TIMESTAMP NOT NULL,
+                          locked_at TIMESTAMP NOT NULL,
+                          value VARCHAR(255) NOT NULL,
+                          CONSTRAINT pk_shedlock PRIMARY KEY (name)
 );
 
 
-
-CREATE OR REPLACE FUNCTION public.tmp_create_pub() RETURNS void AS '
-    BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = ''outbox_publication'') THEN
-            CREATE PUBLICATION outbox_publication FOR TABLE public.outbox, public.debezium_heartbeat;
-        END IF;
-    END;
-' LANGUAGE plpgsql;
-
-SELECT public.tmp_create_pub();
-DROP FUNCTION public.tmp_create_pub();
 

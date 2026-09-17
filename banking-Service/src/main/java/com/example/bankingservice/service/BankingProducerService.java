@@ -28,12 +28,12 @@ public class BankingProducerService {
     }
 
 
-    public void sendNotification(UUID uuid,String userid){
+    public void sendNotification(UUID uuid,String userid,String message){
 
         KafkaConfig.TopicConfig topicConfig = kafkaConfig.getTopics().getBankingNotification();
 
         PaymentDataEvent event = PaymentDataEvent.newBuilder()
-                .setUserId(userid).setAggregateId(uuid).setStatus("success").build();
+                .setUserId(userid).setAggregateId(uuid).setStatus(message).build();
 
 
         ProducerRecord<String, PaymentDataEvent> record = new ProducerRecord<>(

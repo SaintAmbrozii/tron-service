@@ -35,6 +35,8 @@ spring:
     locations: classpath:db/migration
     schemas: public
     default-schema: public
+
+
   kafka:
     bootstrap-servers: localhost:9092
     client-id: wallet-service

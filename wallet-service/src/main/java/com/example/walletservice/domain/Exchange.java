@@ -18,7 +18,12 @@ import java.util.UUID;
 @FieldNameConstants
 @ToString
 @Entity
-@Table(name = "exchanges")
+@Table(name = "exchanges",indexes = {
+        @Index(
+                name = "idx_exchanges_retry_status",
+                columnList = "status"
+        )
+})
 public class Exchange {
 
     @Id
@@ -38,13 +43,23 @@ public class Exchange {
     @Column(name = "usd_amount",precision = 10, scale = 2)
     private BigDecimal usdAmount;
 
+    @Enumerated(value = EnumType.STRING)
     @Column(name = "status")
-    private Boolean status;
+    private Status status;
+
+    @Builder.Default
+    @Column(name = "retry_count", nullable = false)
+    private int retryCount = 0;
+
+    @Column(name = "tx_id")
+    private String txId;
+
+    @Column(name = "fail_reason", columnDefinition = "TEXT")
+    private String failReason;
 
     @CreationTimestamp
     @Column(name = "create_date",updatable = false, insertable = false)
     private ZonedDateTime createDate;
-
 
 
 }

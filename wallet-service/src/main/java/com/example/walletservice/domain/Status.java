@@ -2,5 +2,5 @@ package com.example.walletservice.domain;
 
 public enum Status {
 
-    CREATED, CONFIRMED
+    CREATED,PROCESSING, COMPLETED, PENDING_RETRY, FAILED
 }
