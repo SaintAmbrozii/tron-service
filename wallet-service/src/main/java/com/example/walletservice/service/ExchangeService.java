@@ -9,17 +9,13 @@ import com.example.walletservice.client.banking.response.QrResponse;
 import com.example.walletservice.domain.Exchange;
 import com.example.walletservice.domain.Status;
 import com.example.walletservice.repo.ExchangeRepo;
-import com.example.walletservice.tronclient.TronClient;
 import com.example.walletservice.dto.OperationExchange;
 import com.example.walletservice.dto.RequestExchangeToRub;
 import com.example.walletservice.dto.ResponseExchangeToRub;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import org.tron.trident.core.ApiWrapper;
-import org.tron.trident.core.contract.Contract;
-import org.tron.trident.core.contract.Trc20Contract;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.*;
@@ -37,7 +33,7 @@ public class ExchangeService {
     private static final String merchantId = "MF0000000001";
 
     private final WalletService walletService;
-    private final ApiExchangeSerivce cbRfService;
+    private final ApiExchangeService apiExchangeService;
     private final UserExchangeService userExchangeService;
     private final PollingService pollingService;
     private final SseService sseService;
@@ -46,11 +42,11 @@ public class ExchangeService {
     private final BankingClient bankingClient;
     private final ExchangeRepo exchangeRepo;
 
-    public ExchangeService(WalletService walletService, ApiExchangeSerivce cbRfService, UserExchangeService userExchangeService,
+    public ExchangeService(WalletService walletService, ApiExchangeService apiExchangeService, UserExchangeService userExchangeService,
                            PollingService pollingService, SseService sseService,
                            MeterRegistry meterRegistry, BankingClient bankingClient, ExchangeRepo exchangeRepo) {
         this.walletService = walletService;
-        this.cbRfService = cbRfService;
+        this.apiExchangeService = apiExchangeService;
         this.userExchangeService = userExchangeService;
         this.pollingService = pollingService;
         this.sseService = sseService;
@@ -65,7 +61,7 @@ public class ExchangeService {
 
         String address = walletService.generate(userId);
 
-        BigDecimal rubAmount = BigDecimal.valueOf(cbRfService.convertUsdToRub(requestExchange.getUsd_amount()))
+        BigDecimal rubAmount = BigDecimal.valueOf(apiExchangeService.convertUsdToRub(requestExchange.getUsd_amount()))
                 .setScale(2,RoundingMode.HALF_UP);
 
         pollingService.startPolling(userId,address,requestExchange.getFromCardNumber(),rubAmount,BigDecimal.valueOf(requestExchange.getUsd_amount()));
@@ -74,6 +70,7 @@ public class ExchangeService {
 
     }
 
+    @Transactional
     public QrResponse getQRRubToUsd (DataPayment payment, String userId) {
 
         SpbData paymentData = SpbData.builder()
@@ -90,7 +87,7 @@ public class ExchangeService {
 
         double rubAmount = Double.valueOf(payment.getAmount())/100;
 
-        BigDecimal usdAmount = BigDecimal.valueOf(cbRfService.convertRubToUsd(rubAmount))
+        BigDecimal usdAmount = BigDecimal.valueOf(apiExchangeService.convertRubToUsd(rubAmount))
                         .setScale(2,RoundingMode.HALF_UP);
 
         Exchange exchange = Exchange.builder()

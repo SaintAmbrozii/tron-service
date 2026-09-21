@@ -20,19 +20,30 @@ public class WalletTransferListener {
         this.blockChainWalletService = blockChainWalletService;
     }
 
-    @Async("blockchainTaskExecutor")
+
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onApplicationEvent(TransferEvent event) {
 
-        try {
-            blockChainWalletService.transferUsdToAdminWallet(event.privatKey(),event.address(),event.amount());
-            log.info("Transfer completed for wallet {}, amount {}",
-                    event.address(), event.amount());
-        } catch (Exception e) {
-            log.error("Transfer failed for wallet {}, amount {}",
-                    event.address(), event.amount(), e);
-        }
+        log.info("[СЛУШАТЕЛЬ] Транзакция БД закоммичена. Запуск асинхронного пайплайна для {}", event.address());
 
+        blockChainWalletService.transferUsdToAdminWalletAsync(event.privatKey(), event.address(), event.amount())
+                .thenAccept(finalUsdtTxId -> {
+
+                    log.info("[УСПЕХ ЭВАКУАЦИИ] Средства успешно переведены на админ-кошелек. Wallet: {}, Amount: {}, TxID: {}",
+                            event.address(), event.amount(), finalUsdtTxId);
+
+                })
+                .exceptionally(e -> {
+
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
+
+                    log.error("[КРИТИЧЕСКАЯ ОШИБКА ЭВАКУАЦИИ] Пайплайн завершился сбоем для кошелька {}. Сумма: {}. Причина: {}",
+                            event.address(), event.amount(), cause.getMessage());
+
+                    return null;
+                });
+
+        log.info("[СЛУШАТЕЛЬ] Пайплайн успешно делегирован в фон для кошелька {}. Поток свободен.", event.address());
     }
 
 }

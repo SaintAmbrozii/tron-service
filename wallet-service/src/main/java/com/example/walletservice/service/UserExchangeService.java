@@ -97,32 +97,43 @@ public class UserExchangeService {
             return;
         }
 
-        CompletableFuture.runAsync(() -> {
+        Exchange exchange = exchangeRepo.findById(uuid).orElse(null);
+        if (exchange == null) {
+            log.error("Заявка {} не найдена в БД после успешного лока", uuid);
+            statusHolder.moveToRetryOrFailed(uuid, "Exchange not found");
+            return;
+        }
 
-            Exchange exchange = exchangeRepo.findById(uuid).orElse(null);
-            if (exchange == null) return;
+        log.info("Заявка {} взята в работу. Инициируем асинхронный перевод USDT...", uuid);
 
-            try {
+        blockChainWalletService.transferUsdtToWalletAsync(exchange.getUserWallet(), exchange.getUsdAmount())
+                .thenAccept(txId -> {
+                    // Этот блок выполнится в потоке "BlockchainAsync-X", когда TRON вернет TxID
+                    log.info("[ФОН] Транзакция для заявки {} успешна. TxID: {}", uuid, txId);
 
-                String txId = blockChainWalletService.transferUsdtToWallet(exchange.getUserWallet(), exchange.getUsdAmount());
+                    statusHolder.moveToCompleted(uuid, txId);
 
-                statusHolder.moveToCompleted(uuid, txId);
+                    OperationExchange response = OperationExchange.builder()
+                            .message("Обмен успешно произведен")
+                            .usdt_amount(exchange.getUsdAmount().doubleValue())
+                            .rub_amount(exchange.getRubAmount().doubleValue())
+                            .build();
 
-                OperationExchange response = OperationExchange.builder()
-                        .message("Обмен успешно произведен").
-                        usdt_amount(exchange.getUsdAmount().doubleValue())
-                        .rub_amount(exchange.getRubAmount().doubleValue()).build();
+                    sseService.sendNotification(exchange.getUserId(), response);
+                })
+                .exceptionally(e -> {
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
 
-                sseService.sendNotification(exchange.getUserId(), response);
+                    log.error("[ФОН ОШИБКА] Первичная отправка для exchange {} не удалась. Откатываем для повтора шедулером.", uuid, cause);
 
-            } catch (Exception e) {
+                    statusHolder.moveToRetryOrFailed(uuid, cause.getMessage());
+                    return null;
+                });
 
-                log.error("Первичная отправка для exchange {} не удалась. Откатываем для повтора шедулером.", uuid, e);
-
-                statusHolder.moveToRetryOrFailed(uuid, e.getMessage());
-            }
-        });
+        log.info("Метод getExchangeToTransfer для заявки {} успешно делегировал задачу в фон.", uuid);
     }
+
+
 
 
     public List<ExchangeDto> getUserExchages(String userId){

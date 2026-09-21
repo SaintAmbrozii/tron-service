@@ -12,17 +12,17 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class BlockheinOutboxSheduller {
+public class BlockСhainOutboxSheduler {
 
     private final ExchangeRepo exchangeRepo;
     private final UserExchangeService userExchangeService;
 
-    public BlockheinOutboxSheduller(ExchangeRepo exchangeRepo, UserExchangeService userExchangeService) {
+    public BlockСhainOutboxSheduler(ExchangeRepo exchangeRepo, UserExchangeService userExchangeService) {
         this.exchangeRepo = exchangeRepo;
         this.userExchangeService = userExchangeService;
     }
 
-    @Scheduled(fixedDelayString = "${app.outbox.scheduler-delay-ms:30000}") // Каждые 30 секунд
+    @Scheduled(fixedDelayString = "${app.outbox.scheduler-delay-ms:30000}")
     @SchedulerLock(
             name = "ExchangeOutboxScheduler_retryFailedExchanges",
             lockAtMostFor = "5m",
