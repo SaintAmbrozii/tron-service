@@ -18,6 +18,7 @@ import org.tron.trident.proto.Response;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -96,11 +97,15 @@ public class WalletService {
 
     @Transactional
     public void updateBalance(String walletAddress, BigDecimal balance) {
-        Wallet inDB = walletRepo.findByAddress(walletAddress);
-        inDB.setAmount(balance);
-        Wallet updated = walletRepo.save(inDB);
+        Optional<Wallet> inDB = walletRepo.findByAddressToUpdate(walletAddress);
+        if (inDB.isPresent()) {
+            Wallet updated = inDB.get();
+            BigDecimal newBalance = updated.getAmount().add(balance);
+            updated.setAmount(newBalance);
+            Wallet saved = walletRepo.save(updated);
+            eventPublisher.publishEvent(new TransferEvent(saved.getId(),saved.getAddress(),saved.getPrivatKey(),saved.getAmount()));
+        }
 
-        eventPublisher.publishEvent(new TransferEvent(updated.getId(),updated.getAddress(),updated.getPrivatKey(),updated.getAmount()));
     }
 
 

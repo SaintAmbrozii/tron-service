@@ -1,8 +1,6 @@
 package com.example.bankingservice.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +14,13 @@ import java.util.concurrent.ScheduledFuture;
 public class BankingPollingService {
 
     private final ThreadPoolTaskScheduler taskScheduler;
+    private final PaymentOperationService paymentOperationService;
     private final BankingService bankingService;
 
-    public BankingPollingService(ThreadPoolTaskScheduler taskScheduler, @Lazy BankingService bankingService) {
+    public BankingPollingService(ThreadPoolTaskScheduler taskScheduler,
+                                 PaymentOperationService paymentOperationService, BankingService bankingService) {
         this.taskScheduler = taskScheduler;
+        this.paymentOperationService = paymentOperationService;
         this.bankingService = bankingService;
     }
 
@@ -44,7 +45,7 @@ public class BankingPollingService {
                     String status = bankingService.getStatus(qrId);
 
                     if (status.equals("Active")) {
-                        bankingService.createPaymentAndTransfer(uuid);
+                        paymentOperationService.createPaymentAndTransfer(uuid);
 
                         futureHolder[0].cancel(false); // Останавливаем поллинг
                     }

@@ -42,11 +42,11 @@ public class Exchange {
 
     @Column(name = "usd_amount",precision = 10, scale = 2)
     private BigDecimal usdAmount;
-
     @Enumerated(value = EnumType.STRING)
     @Column(name = "status")
     private Status status;
-
+    @Column(name = "phone",nullable = false)
+    private String phone;
     @Builder.Default
     @Column(name = "retry_count", nullable = false)
     private int retryCount = 0;
@@ -58,7 +58,7 @@ public class Exchange {
     private String failReason;
 
     @CreationTimestamp
-    @Column(name = "create_date",updatable = false, insertable = false)
+    @Column(name = "create_date")
     private ZonedDateTime createDate;
 
 

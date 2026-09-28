@@ -8,10 +8,10 @@ import lombok.Data;
 @Data
 public class DataPayment {
 
-    @NotBlank(message = "Адрес не должен быть пустым")
+
     @TronAddress
     private String wallet;
-    @NotBlank(message = "Сумма не должна быть меньше")
+
     @Min(1000)
     private Integer amount;
 }

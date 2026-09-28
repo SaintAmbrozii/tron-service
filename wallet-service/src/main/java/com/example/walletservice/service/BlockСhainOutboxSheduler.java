@@ -23,11 +23,6 @@ public class BlockСhainOutboxSheduler {
     }
 
     @Scheduled(fixedDelayString = "${app.outbox.scheduler-delay-ms:30000}")
-    @SchedulerLock(
-            name = "ExchangeOutboxScheduler_retryFailedExchanges",
-            lockAtMostFor = "5m",
-            lockAtLeastFor = "10s"
-    )
     public void retryFailedExchanges() {
 
         List<Exchange> retryQueue = exchangeRepo.findAllByStatus(Status.PENDING_RETRY);

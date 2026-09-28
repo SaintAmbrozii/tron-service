@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS exchanges(
                           user_wallet VARCHAR NOT NULL ,
                           status VARCHAR(50) NOT NULL,
                           retry_count INT NOT NULL DEFAULT 0,
-                          tx_id VARCHAR(255),                    --
+                          tx_id VARCHAR(255),
+                          phone VARCHAR NOT NULL,
                           fail_reason TEXT,
                           rub_amount NUMERIC(10,2) ,
                           usd_amount NUMERIC(10,2),
@@ -39,13 +40,6 @@ CREATE TABLE IF NOT EXISTS outbox(
                        create_date TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS shedlock (
-                          name VARCHAR(64) NOT NULL,
-                          lock_until TIMESTAMP NOT NULL,
-                          locked_at TIMESTAMP NOT NULL,
-                          value VARCHAR(255) NOT NULL,
-                          CONSTRAINT pk_shedlock PRIMARY KEY (name)
-);
 
 
 

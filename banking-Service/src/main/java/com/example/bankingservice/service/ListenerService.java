@@ -4,17 +4,13 @@ package com.example.bankingservice.service;
 
 import com.example.avro.outbox.OutboxDataEvent;
 import com.example.bankingservice.config.KafkaConfig;
-import com.example.bankingservice.domain.Payments;
 import lombok.extern.slf4j.Slf4j;
-import com.example.bankingservice.repo.PaymentsRepo;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
 
 
 @Slf4j
@@ -27,11 +23,11 @@ public class ListenerService {
 
 
     private final KafkaConfig kafkaConfig;
-    private final BankingService bankingService;
+    private final PaymentOperationService paymentOperationService;
 
-    public ListenerService(KafkaConfig kafkaConfig, BankingService bankingService) {
+    public ListenerService(KafkaConfig kafkaConfig,PaymentOperationService paymentOperationService) {
         this.kafkaConfig = kafkaConfig;
-        this.bankingService = bankingService;
+        this.paymentOperationService = paymentOperationService;
     }
 
 
@@ -50,7 +46,7 @@ public class ListenerService {
         log.info("In manual commit mode. Received OutboxBankingEventV1 {}", event);
         try {
 
-            bankingService.savePayment(event);
+            paymentOperationService.savePayment(event);
             acknowledgment.acknowledge();
 
         } catch (Exception e) {

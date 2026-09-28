@@ -10,19 +10,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import javax.sql.DataSource;
 
-@EnableScheduling
+
 @Configuration
-@EnableSchedulerLock(defaultLockAtMostFor = "10m")
+@EnableScheduling
 public class ScheduledConfig {
 
-    @Bean
-    public LockProvider lockProvider(DataSource dataSource) {
-        return new JdbcTemplateLockProvider(
-                JdbcTemplateLockProvider.Configuration.builder()
-                        .withJdbcTemplate(new JdbcTemplate(dataSource))
-                        .usingDbTime() // Использовать время сервера БД для синхронизации нод
-                        .build()
-        );
-    }
+
 
 }

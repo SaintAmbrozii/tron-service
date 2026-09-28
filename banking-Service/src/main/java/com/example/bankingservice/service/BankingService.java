@@ -24,74 +24,19 @@ import java.util.UUID;
 public class BankingService {
 
     private final PaymentsRepo paymentsRepo;
-    private final BankingProducerService producerService;
-    private final UserProducerService userProducerService;
     private final RestClient restClient;
     private static final String accountId = "12345810901234567890/044525104";
     private static final String merchantId = "MF0000000001";
     private final BankingPollingService bankingPollingService;
 
-    public BankingService(PaymentsRepo paymentsRepo, BankingProducerService producerService, UserProducerService userProducerService, RestClient restClient, BankingPollingService bankingPollingService) {
+    public BankingService(PaymentsRepo paymentsRepo, RestClient restClient, BankingPollingService bankingPollingService) {
         this.paymentsRepo = paymentsRepo;
-        this.producerService = producerService;
-        this.userProducerService = userProducerService;
+
         this.restClient = restClient;
         this.bankingPollingService = bankingPollingService;
     }
 
 
-    public void savePayment(OutboxDataEvent event) {
-        Payments payments = Payments.builder().phone(event.getPhone()).aggregateId(event.getAggregateId())
-                .amount(new BigDecimal(event.getAmount()))
-                .userId(event.getUserId()).status(false).build();
-        System.out.println(payments);
-        Payments saved = paymentsRepo.save(payments);
-
-        this.createPayment(saved.getId());
-    }
-
-
-    @Transactional
-    public void createPayment(UUID uuid) {
-        Optional<Payments> payments = paymentsRepo.findById(uuid);
-
-        if (payments.isPresent()) {
-            Payments update = payments.get();
-            update.setStatus(true);
-            paymentsRepo.save(update);
-
-            UUID aggregateId = update.getAggregateId();
-            String userId = update.getUserId();
-
-            producerService.sendNotification(aggregateId, userId,"success");
-            userProducerService.sendUserNotification(aggregateId,userId,"success");
-
-        }
-    }
-
-    @Transactional
-    public void createPaymentAndTransfer(UUID uuid) {
-        Optional<Payments> payments = paymentsRepo.findById(uuid);
-
-        if (payments.isPresent()) {
-            Payments update = payments.get();
-            update.setStatus(true);
-            paymentsRepo.save(update);
-
-            UUID aggregateId = update.getAggregateId();
-            String userId = update.getUserId();
-
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    // Этот код выполнится строго после того, как БД скажет "ОК"
-                    producerService.sendNotification(aggregateId, userId, "payment");
-                    userProducerService.sendUserNotification(aggregateId, userId, "payment");
-                }
-            });
-
-        }
-    }
 
     public QrResponse getQr(QrRequest qrRequest,String userId,String aggregateId){
 
@@ -110,6 +55,7 @@ public class BankingService {
         Payments payments = Payments.builder()
                 .userId(userId)
                 .aggregateId(UUID.fromString(aggregateId))
+                .phone("+79134896593")
                 .amount(BigDecimal.valueOf(qrRequest.getData().getAmount()/100))
                 .status(false).build();
 

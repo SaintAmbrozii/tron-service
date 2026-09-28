@@ -114,6 +114,8 @@ public class BlockChainWalletService {
             resultFuture.completeExceptionally(new RuntimeException("Ошибка на этапе отправки USDT", e));
         }
 
+        System.out.println(resultFuture);
+
         return resultFuture;
     }
 

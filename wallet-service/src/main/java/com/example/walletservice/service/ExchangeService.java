@@ -6,6 +6,8 @@ import com.example.walletservice.client.banking.request.ImageParams;
 import com.example.walletservice.client.banking.request.QrRequest;
 import com.example.walletservice.client.banking.request.SpbData;
 import com.example.walletservice.client.banking.response.QrResponse;
+import com.example.walletservice.client.user.UserClient;
+import com.example.walletservice.client.user.response.UserDto;
 import com.example.walletservice.domain.Exchange;
 import com.example.walletservice.domain.Status;
 import com.example.walletservice.repo.ExchangeRepo;
@@ -41,10 +43,13 @@ public class ExchangeService {
     private final AtomicInteger activePollingsGauge;
     private final BankingClient bankingClient;
     private final ExchangeRepo exchangeRepo;
+    private final UserClient userClient;
 
-    public ExchangeService(WalletService walletService, ApiExchangeService apiExchangeService, UserExchangeService userExchangeService,
+    public ExchangeService(WalletService walletService, ApiExchangeService apiExchangeService,
+                           UserExchangeService userExchangeService,
                            PollingService pollingService, SseService sseService,
-                           MeterRegistry meterRegistry, BankingClient bankingClient, ExchangeRepo exchangeRepo) {
+                           MeterRegistry meterRegistry, BankingClient bankingClient,
+                           ExchangeRepo exchangeRepo, UserClient userClient) {
         this.walletService = walletService;
         this.apiExchangeService = apiExchangeService;
         this.userExchangeService = userExchangeService;
@@ -53,6 +58,7 @@ public class ExchangeService {
         this.activePollingsGauge = meterRegistry.gauge("trident_active_pollings", new AtomicInteger(0));
         this.bankingClient = bankingClient;
         this.exchangeRepo = exchangeRepo;
+        this.userClient = userClient;
     }
 
 
@@ -90,8 +96,11 @@ public class ExchangeService {
         BigDecimal usdAmount = BigDecimal.valueOf(apiExchangeService.convertRubToUsd(rubAmount))
                         .setScale(2,RoundingMode.HALF_UP);
 
+        UserDto userDto = userClient.getUser(userId);
+
         Exchange exchange = Exchange.builder()
                 .userId(userId)
+                .phone(userDto.getPhone())
                 .rubAmount(BigDecimal.valueOf(rubAmount))
                 .usdAmount(usdAmount)
                 .userWallet(payment.getWallet())

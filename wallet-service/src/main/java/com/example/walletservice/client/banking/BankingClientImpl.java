@@ -5,6 +5,7 @@ import com.example.walletservice.client.banking.response.QrResponse;
 import com.example.walletservice.client.usd.AbstractClient;
 import com.example.walletservice.exception.RestClientNonRetryableException;
 import com.example.walletservice.exception.RestClientRetryableException;
+import com.example.walletservice.properties.BankingClientProperties;
 import com.example.walletservice.properties.UsdClientProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -24,10 +25,10 @@ public class BankingClientImpl extends AbstractClient implements BankingClient {
 
     private static final String BANKING_BACKEND = "bankingBackend";
     private static final String SERVICE_NAME = "banking-service";
-    private final UsdClientProperties properties;
+    private final BankingClientProperties properties;
     private final RestClient bankingRestClient;
 
-    public BankingClientImpl(@Autowired(required = false) ObjectMapper objectMapper, UsdClientProperties properties, RestClient bankingRestClient) {
+    public BankingClientImpl(@Autowired(required = false) ObjectMapper objectMapper, BankingClientProperties properties, RestClient bankingRestClient) {
         super(objectMapper);
         this.properties = properties;
         this.bankingRestClient = bankingRestClient;

@@ -120,6 +120,22 @@ usd-client:
     trust-store-bundle-name: ""
     ssl-mode: NONE
 
+user-client:
+  nearest-path: "/api/v1/users/profile"
+  config:
+    root-uri: http://localhost:8090
+    max-connections: 10
+    max-connections-per-route: 10
+    inactivity-seconds: 10
+    read-timeout: 5s
+    connect-timeout: 2s
+    connection-request-timeout: 1s
+    buffering-client-http-request-factory: true
+    key-store-bundle-name: ""
+    trust-store-bundle-name: ""
+    ssl-mode: NONE
+
+
 
 resilience4j:
   circuitbreaker:
@@ -141,6 +157,8 @@ resilience4j:
         base-config: default
       bankingBackend:
         base-config: default
+      userBackend:
+        base-config: default
   retry:
     metrics:
       enabled: true
@@ -161,6 +179,8 @@ resilience4j:
       usdBackend:
         base-config: default
       bankingBackend:
+        base-config: default
+      userBackend:
         base-config: default
 
 external:

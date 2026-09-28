@@ -27,7 +27,7 @@ public class Payments {
     @Column(name = "user_id",nullable = false)
     private String userId;
 
-    @Column(name = "phone", nullable = false)
+    @Column(name = "phone")
     private String phone;
 
     @Column(name = "amount",columnDefinition = "NUMERIC(10,2)")

@@ -11,9 +11,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -34,13 +37,15 @@ public class OutboxService {
     }
 
     @Scheduled(fixedDelay = 30000)
-    @SchedulerLock(name = "cleanOutboxQueue", lockAtMostFor = "5m", lockAtLeastFor = "10s")
+    @Transactional
     public void pollAndSend() {
 
         KafkaConfig.TopicConfig topicConfig = kafkaConfig.getTopics().getBankingTopic();
 
         List<Outbox> outboxList = outboxRepo.findAllByStatusIsFalse();
         if (!outboxList.isEmpty()) {
+            List<UUID> idsToDelete = new ArrayList<>();
+
             for (Outbox outbox: outboxList) {
 
                 OutboxDataEvent outboxDataEvent = OutboxDataEvent.newBuilder()
@@ -59,14 +64,22 @@ public class OutboxService {
 
                     log.info("Successfully sent event {} to kafka.", outboxDataEvent);
 
-                    outboxRepo.deleteById(outbox.getId());
+                    idsToDelete.add(outbox.getId());
 
                 }catch (Exception e) {
 
                     log.error("[OUTBOX-ШЕДУЛЕР] Сбой отправки отложенного сообщения {} в Kafka. " +
                             "Оно остается в БД до следующего цикла. Причина: {}", outbox.getId(), e.getMessage());
                 }
+
             }
+
+            if (!idsToDelete.isEmpty()) {
+                outboxRepo.deleteByIdsInBatch(idsToDelete);
+                log.info("[OUTBOX] Пакетно удалено {} записей из БД.", idsToDelete.size());
+            }
+
         }
+
     }
 }

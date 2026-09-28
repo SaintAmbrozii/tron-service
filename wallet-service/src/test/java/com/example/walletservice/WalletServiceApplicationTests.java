@@ -2,7 +2,8 @@ package com.example.walletservice;
 
 import com.example.walletservice.client.usd.UsdClientImpl;
 import com.example.walletservice.client.usd.response.ResponseUsd;
-import com.example.walletservice.service.ApiExchangeSerivce;
+
+import com.example.walletservice.service.ApiExchangeService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,7 @@ import java.net.http.HttpResponse;
 class WalletServiceApplicationTests {
 
     @Autowired
-    ApiExchangeSerivce cbRfService;
+    ApiExchangeService cbRfService;
 
     @Autowired
     UsdClientImpl usdClient;

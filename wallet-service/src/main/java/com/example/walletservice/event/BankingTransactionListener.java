@@ -18,6 +18,8 @@ public class BankingTransactionListener {
     }
 
 
+
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onApplicationEvent(OutboxEvent event) {
 
