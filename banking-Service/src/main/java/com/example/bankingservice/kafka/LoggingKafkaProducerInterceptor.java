@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.checkerframework.checker.units.qual.K;
+
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;

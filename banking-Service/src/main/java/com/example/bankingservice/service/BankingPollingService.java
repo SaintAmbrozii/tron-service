@@ -1,6 +1,7 @@
 package com.example.bankingservice.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,7 @@ public class BankingPollingService {
     private final BankingService bankingService;
 
     public BankingPollingService(ThreadPoolTaskScheduler taskScheduler,
-                                 PaymentOperationService paymentOperationService, BankingService bankingService) {
+                                 PaymentOperationService paymentOperationService, @Lazy BankingService bankingService) {
         this.taskScheduler = taskScheduler;
         this.paymentOperationService = paymentOperationService;
         this.bankingService = bankingService;

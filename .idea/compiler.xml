@@ -9,11 +9,32 @@
         <outputRelativeToContentRoot value="true" />
         <module name="TronService" />
         <module name="exhange-service" />
-        <module name="banking-Service" />
         <module name="user-service" />
+        <module name="banking-Service" />
+      </profile>
+      <profile name="Annotation profile for exchange-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/springframework/boot/spring-boot-configuration-processor/4.0.8/spring-boot-configuration-processor-4.0.8.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/springframework/boot/spring-boot-configuration-processor/4.0.8/spring-boot-configuration-processor-4.0.8.jar" />
+        </processorPath>
+        <module name="exchange-service" />
+      </profile>
+      <profile name="Annotation profile for wallet-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
+        </processorPath>
         <module name="notificacion-Service" />
-        <module name="gateway" />
         <module name="wallet-service" />
+        <module name="gateway" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="17">
@@ -23,6 +44,7 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="banking-Service" options="-parameters" />
+      <module name="exchange-service" options="-parameters" />
       <module name="exhange-service" options="-parameters" />
       <module name="gateway" options="-parameters" />
       <module name="notificacion-Service" options="-parameters" />

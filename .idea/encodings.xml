@@ -2,12 +2,15 @@
 <project version="4">
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/banking-Service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/banking-Service/target/generated/avro" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/exhange-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/exhange-service/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/gateway/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/notificacion-Service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/notificacion-Service/target/generated-sources/avro" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/user-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/wallet-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/wallet-service/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wallet-service/target/generated-sources/avro" charset="UTF-8" />
   </component>
 </project>

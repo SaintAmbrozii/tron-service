@@ -1,7 +1,7 @@
 package com.example.bankingservice.client.banking.payload.request;
 
 import lombok.*;
-import org.checkerframework.checker.units.qual.N;
+
 
 @Getter
 @Setter

@@ -6,6 +6,11 @@ server:
     idle-timeout: 20s
 
 spring:
+  threads:
+    virtual:
+      enabled: true
+  main:
+    keep-alive: true
   application:
     name: "gateway-service"
   lifecycle:

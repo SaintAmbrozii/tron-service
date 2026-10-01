@@ -5,6 +5,11 @@ server:
     connection-timeout: 3s
     keep-alive-timeout: 20s
 spring:
+  threads:
+    virtual:
+      enabled: true
+  main:
+    keep-alive: true
   application:
     name: notification-service
   lifecycle:
